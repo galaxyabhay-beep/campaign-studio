@@ -1,3 +1,9 @@
+# Campaign Studio — Vercel edition
+
+This branch migrates Campaign Studio to Next.js and Supabase, with open email-code registration and private per-user campaign storage. See [Vercel setup](VERCEL-SETUP.md) before deployment.
+
+Use `npm ci`, configure `.env.local` from `.env.example`, apply the Supabase migration, then run `npm run dev`. Run `npm run build` and `npm run test:database` to validate. Legacy D1 setup below applies only to the original Sites release.
+
 # Campaign Studio
 
 An AI-assisted campaign planner for small businesses, built as a hackathon first release.
