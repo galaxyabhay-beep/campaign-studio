@@ -1,8 +1,14 @@
 "use client";
-import {useState,type FormEvent} from 'react';
+import {useState} from 'react';
 import {browserAuth} from '@/lib/supabase/client';
-export default function LoginForm(){
- const [email,setEmail]=useState(''),[sentTo,setSentTo]=useState(''),[token,setToken]=useState(''),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
- async function submit(e:FormEvent){e.preventDefault();setBusy(true);setMessage('');try{const client=browserAuth();if(!sentTo){const address=email.trim();const {error}=await client.auth.signInWithOtp({email:address,options:{shouldCreateUser:true}});if(error)throw error;setSentTo(address);setMessage('Check your inbox for your sign-in code.');}else{const {error}=await client.auth.verifyOtp({email:sentTo,token:token.trim(),type:'email'});if(error)throw error;window.location.assign('/');}}catch{setMessage(sentTo?'That code could not be verified. Check the code or request a new one.':'We could not send a code. Please wait a moment and try again.');}finally{setBusy(false);}}
- return <form onSubmit={submit} className="auth-form"><label>Email address<input type="email" required autoComplete="email" value={email} disabled={busy||!!sentTo} onChange={e=>setEmail(e.target.value)}/></label>{sentTo&&<label>Email code<input required inputMode="numeric" autoComplete="one-time-code" minLength={6} maxLength={10} value={token} onChange={e=>setToken(e.target.value.replace(/[^0-9]/g,''))}/></label>}<button className="primary" disabled={busy}>{busy?'Please wait…':sentTo?'Verify and continue':'Send sign-in code'}</button>{sentTo&&<button type="button" disabled={busy} onClick={()=>{setSentTo('');setToken('');setMessage('');}}>Use another email or request a new code</button>}{message&&<p role="status">{message}</p>}</form>;
+export default function LoginForm({failed=false}:{failed?:boolean}){
+ const [busy,setBusy]=useState(false),[message,setMessage]=useState(failed?'Sign-in was not completed. Please try again.':'');
+ async function signIn(){
+  setBusy(true);setMessage('');
+  try{
+   const {error}=await browserAuth().auth.signInWithOAuth({provider:'google',options:{redirectTo:new URL('/auth/callback',window.location.origin).href}});
+   if(error)throw error;
+  }catch{setMessage('Google sign-in is unavailable right now. Please try again shortly.');setBusy(false);}
+ }
+ return <div className="auth-form"><button type="button" className="primary" disabled={busy} onClick={signIn}>{busy?'Opening Google…':'Continue with Google'}</button>{message&&<p role="status">{message}</p>}</div>;
 }
